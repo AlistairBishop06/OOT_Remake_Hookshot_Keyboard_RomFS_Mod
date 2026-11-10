@@ -179,9 +179,11 @@ def vector_keycap(label: str, width: float, bbox, glyph_set, private, global_sub
     x0 += 0.06*ww; y0 += 0.10*hh
     ww *= 0.88; hh *= 0.78
 
-    def polygon(points):
+    def polygon(points, reverse=False):
         if len(points) < 3:
             return
+        if reverse:
+            points = list(reversed(points))
         pen.moveTo(points[0])
         for pt in points[1:]:
             pen.lineTo(pt)
@@ -192,17 +194,29 @@ def vector_keycap(label: str, width: float, bbox, glyph_set, private, global_sub
             return
         polygon([(a,b),(c,b),(c,d),(a,d)])
 
-    def chamfer_box(a,b,c,d,r):
+    def chamfer_box(a,b,c,d,r, reverse=False):
         r = max(0, min(r, (c-a)/2, (d-b)/2))
-        polygon([(a+r,b),(c-r,b),(c,b+r),(c,d-r),(c-r,d),(a+r,d),(a,d-r),(a,b+r)])
+        polygon([(a+r,b),(c-r,b),(c,b+r),(c,d-r),(c-r,d),(a+r,d),(a,d-r),(a,b+r)], reverse=reverse)
 
-    # A slightly softer keyboard-style keycap outline.
-    chamfer = min(ww,hh) * 0.10
-    outer = (x0, y0, x0+ww, y0+hh)
-    inner_inset = min(ww,hh) * 0.085
-    chamfer_box(*outer, chamfer)
-    inner = (outer[0]+inner_inset, outer[1]+inner_inset, outer[2]-inner_inset, outer[3]-inner_inset)
-    chamfer_box(*inner, max(0, chamfer-inner_inset*0.55))
+    # Build the outline from separate filled strokes rather than two nested
+    # contours. Some game glyph renderers fill nested contours solid.
+    chamfer = min(ww, hh) * 0.10
+    border = min(ww, hh) * 0.075
+    outer = (x0, y0, x0 + ww, y0 + hh)
+    inner = (x0 + border, y0 + border, x0 + ww - border, y0 + hh - border)
+
+    def corners(box, radius):
+        a, b, c, d = box
+        radius = min(radius, (c - a) / 2, (d - b) / 2)
+        return [(a + radius, b), (c - radius, b), (c, b + radius),
+                (c, d - radius), (c - radius, d), (a + radius, d),
+                (a, d - radius), (a, b + radius)]
+
+    outside = corners(outer, chamfer)
+    inside = corners(inner, max(0, chamfer - border * 0.55))
+    for i in range(8):
+        j = (i + 1) % 8
+        polygon([outside[i], outside[j], inside[j], inside[i]])
 
     label = label.upper()
     tw = max(1, 6*len(label)-1)

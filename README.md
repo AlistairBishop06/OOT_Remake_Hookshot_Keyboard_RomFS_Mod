@@ -1,63 +1,154 @@
-# Hookshot — actual in-game keyboard button prompts (RomFS mod generator)
+# Hookshot Keyboard Prompts
 
-This is **not a desktop overlay**. It generates a real `mods/99-Keyboard-Prompts/romfs/` mod for the [NotRexed/Hookshot](https://github.com/NotRexed/Hookshot) PC port of the Ocarina of Time Switch 2 remake. It changes the **game's** font icon outlines and the game's UI texture atlas, using the keyboard bindings stored in `hookshot_options.ini`.
+**Keyboard and mouse button prompts for the PC port of *The Legend of Zelda: Ocarina of Time* (Switch 2 remake).**
 
-**The generated files depend on the player's own game files.** No game font, texture atlas, RomFS data, or compiled game is included in this ZIP. You need an installed Hookshot game and its retained `romfs` folder to generate the assets.
+This mod replaces the game's Nintendo-style button icons with the keys you actually use in [Hookshot](https://github.com/NotRexed/Hookshot). Instead of placing a separate overlay on top of the game, it generates replacement **RomFS assets** for the in-game interface: dialogue prompts, button hints, and supported HUD textures.
 
-## Install on Windows
+Prompts are generated from your existing `hookshot_options.ini`, so there is no separate keybind list to maintain. Change your controls in Hookshot, rebuild the mod, and the new prompts will appear the next time you launch the game.
 
-1. **Close Hookshot**. Back up your saves/settings before modding.
-2. Ensure you have **Python 3.10+** installed from [python.org](https://www.python.org/downloads/) with `pip` (select **Add Python to PATH** if offered).
-3. Extract this ZIP into a folder alongside your Hookshot installation (putting it *inside* the Hookshot game folder also works).
-4. Double-click **`INSTALL.bat`**. If asked, enter the path of the folder containing `hookshot.exe`, `hookshot_options.ini`, and `romfs`.
-5. It installs Python dependencies, reads your own RomFS, and builds the mod at `<game folder>/mods/99-Keyboard-Prompts/romfs/`.
-6. Start Hookshot normally. The replacement keycaps should appear where the game displays its text button icons, ocarina note buttons and applicable in-game UI key textures.
+> **Note:** The game loads these assets at startup. Keybind changes made while playing cannot update the in-game icons until the mod is rebuilt and Hookshot is restarted.
 
-**For automatic updates between runs:** Launch with `PLAY_WITH_KEYBOARD_PROMPTS.bat`. It checks your current bindings, only regenerates the mod when something changed, and starts Hookshot. If you edited bindings in Hookshot's **Insert → Controls** menu during a session, **exit and launch through this BAT again** to see the new icons.
+## Screenshots
 
-You can also run manually:
+### In-game prompts
+
+![Keyboard prompts in Hookshot gameplay](https://github.com/user-attachments/assets/dcab7149-da5b-44dd-a15c-e603abc0c72e)
+
+### System menu and control guide
+
+![Keyboard prompt replacements in the Hookshot System menu](https://github.com/user-attachments/assets/bb10631a-3827-4ba2-9d02-190ebd6c1f61)
+
+*Screenshots were captured during development. The RomFS replacements have been loaded successfully in-game, but the final keycap appearance is still being refined; earlier builds have shown mirrored glyphs or filled keycaps.*
+
+## Features
+
+- **Actual in-game prompts.** Replaces supported button glyphs in the game's font and UI texture atlas; no separate on-screen overlay is needed.
+- **Uses your keybinds.** Reads keyboard and mouse assignments directly from `hookshot_options.ini`, including custom controls.
+- **Supports mouse buttons.** Displays labels such as `LMB`, `RMB`, `MMB`, `M4`, and `M5`.
+- **Optional dual bindings.** Show the first assigned key by default, or use `--both` to show both keys assigned to a button.
+- **Automatic rebuilding between launches.** The included launcher checks for changed bindings and regenerates the assets only when needed.
+- **No original game assets distributed.** All replacement files are produced locally using your own extracted game files.
+
+## Requirements
+
+- A working installation of [Hookshot](https://github.com/NotRexed/Hookshot) on Windows.
+- The game's original, extracted **`romfs` directory**, retained alongside Hookshot or accessible at another path.
+- **Python 3.10 or later**, with `pip` available. Download it from [python.org](https://www.python.org/downloads/).
+- Enough free space and memory to process the game's UI texture atlas, which can be large when decompressed.
+
+The installer handles the Python packages in `requirements.txt`: FontTools, Pillow, zstandard, and astc-encoder-py.
+
+## Installation
+
+1. **Close Hookshot** before making any changes. Backing up your saves and settings first is recommended.
+2. Download this repository using **Code → Download ZIP**, or clone it with Git.
+3. Extract the files anywhere convenient, including within your Hookshot game directory.
+4. Run **`INSTALL.bat`**.
+5. When prompted, select the folder containing `hookshot.exe` and `hookshot_options.ini`.
+6. Once generation completes, start Hookshot normally.
+
+The installer reads your existing keybinds and builds the mod at:
+
+```text
+Hookshot/
+└── mods/
+    └── 99-Keyboard-Prompts/
+        └── romfs/
+            ├── Font2/
+            ├── UI/
+            └── System/
+```
+
+Your original game assets are used as inputs and are not overwritten. The generator writes replacement files into Hookshot's `mods` directory.
+
+### Keeping prompts in sync with your controls
+
+Use **`PLAY_WITH_KEYBOARD_PROMPTS.bat`** instead of launching Hookshot directly. It checks the saved bindings, rebuilds the mod if required, and then starts the game.
+
+If you change a keybind through **Insert → Controls** while playing, exit the game and launch it again through the batch file. The updated key will then be reflected in the generated prompts.
+
+This is an **update between launches**, not live replacement during gameplay.
+
+## Manual installation and options
+
+You can run the generator yourself from a terminal:
 
 ```powershell
 python -m pip install -r requirements.txt
 python build_keyboard_mod.py --game "C:\Games\Hookshot"
 ```
 
-If your game's original RomFS isn't at `<game folder>/romfs`, pass it separately:
+If your extracted RomFS is stored elsewhere, specify its location:
 
 ```powershell
 python build_keyboard_mod.py --game "C:\Games\Hookshot" --romfs "D:\MyGame\romfs"
 ```
 
-Use `--both` to draw both bound keys (e.g. `E/SHIFT`) instead of only the first binding, although labels may be smaller. Use `--font-only` for a quicker build if you only want the text icons, not the texture HUD elements.
+Two optional arguments are available:
 
-## Important limitation — changing bindings during play
+| Option | Description |
+| --- | --- |
+| `--both` | Display both bindings for a button, for example `E/ENTER`. Longer labels may appear smaller. |
+| `--font-only` | Generate text-based button glyphs without rebuilding the UI texture atlas. Faster, but some HUD icons remain unchanged. |
 
-This is a **real, loadable RomFS replacement mod**. Hookshot currently only loads RomFS mods and indexes their files at startup; the game reads its button-icon font and UI atlas at startup as well. A RomFS mod cannot make an already-loaded in-game button icon change instantly when the bindings change in Insert → Controls. The regenerated icons become visible **on the next game launch**. The BAT wrapper is the closest possible automatic behaviour without modifying and rebuilding Hookshot's host or injecting unsupported native code.
+Each button normally displays its **first** configured key. For example, `key_a=69,13` uses `E` unless you run the generator with `--both`.
 
-## Which prompts are affected?
+## What the mod replaces
 
-- **Yes:** The button-icons used by in-game dialogue and control prompts (`Font2/Scalable/External...bfotf`).
-- **Yes:** Ocarina note button textures (`OcarinaButton...`) and A/B/X/Y UI letter textures (`KeyTexFont...`) in `Common...bntx`.
-- **Not yet:** Every bespoke layout or controller picture in the pause menu. The original full controller guide and the Talk ring positions remain; labels within their fonts and selected textures are replaced where applicable.
-- **Not live:** Changes to Hookshot's control bindings only appear once the game loads a regenerated mod on the next launch.
+Hookshot's button prompts come from more than one kind of asset. This generator currently handles:
 
-When a binding has two entries (`key_a=69,13`), the mod shows the **first** by default; `--both` shows both. Mouse buttons use `LMB`, `RMB`, `MMB`, `M4`, `M5`; other key codes are the Windows virtual-key codes used by Hookshot.
+| Game element | Support |
+| --- | --- |
+| Dialogue button icons and contextual button hints | Supported through the game's icon font |
+| Ocarina note button textures | Supported |
+| A/B/X/Y letter textures in the shared UI atlas | Supported |
+| Full controller illustration in the System menu | Not replaced |
+| Every custom-made menu graphic and layout | Not fully supported |
+| Changing prompts immediately during gameplay | Not supported |
 
-## Uninstall / disable
+The game also draws certain elements using fixed layouts and controller artwork. These may continue to resemble a controller even when their associated prompts have been replaced.
 
-Close the game and rename `mods/99-Keyboard-Prompts` to `mods/-99-Keyboard-Prompts`, or delete the mod folder. Hookshot ignores mod folders beginning with `-`. No original game files, settings or saves are modified.
+## How it works
+
+The generator reads the current Windows virtual-key codes from `hookshot_options.ini`, then builds two types of replacement assets from your original RomFS:
+
+1. **Font glyphs:** The game's `External` BFOTF font contains special button-icon characters. The generator replaces their outlines with keyboard-style keycaps labelled according to your bindings.
+2. **UI textures:** Supported button textures in the game's `Common` BNTX atlas are redrawn, encoded back into their original texture formats, and placed in a replacement atlas.
+
+Where necessary, it also updates the game's resource size table to accommodate the modified font. Hookshot loads these files using its existing RomFS mod support; no executable patch or external overlay is required.
+
+Changes are not applied to the game's original files. A hash of the relevant inputs is used to avoid rebuilding unchanged assets.
 
 ## Troubleshooting
 
-- The builder needs the **actual** original `romfs` folder; it does **not** generate anything from a save file or just `hookshot_options.ini`.
-- Verify the mod is recognised in `hookshot_log.txt` and that no later-sorting mod replaces the same font/texture files.
-- If another texture mod replaces `UI/Layout2Archive/Common.Product.100.Nin_Ounce_NVN2.bntx.zs`, only one complete atlas can be loaded unless the mods are merged.
-- If another font or resource size table mod replaces the same paths, they may conflict.
-- A texture atlas can be hundreds of MB uncompressed, so the initial generation may require substantial free memory and disk space.
-- To check an edited binding, **close and relaunch** with `PLAY_WITH_KEYBOARD_PROMPTS.bat`.
+**The game still shows Nintendo button icons.** Make sure `INSTALL.bat` completed without an error, restart Hookshot, and check `hookshot_log.txt` to confirm the mod was discovered. Verify that the generated files exist under `mods/99-Keyboard-Prompts/romfs/`.
 
-## Implementation / attribution
+**My new keybind is not showing.** The game caches the font and UI textures at startup. Close Hookshot and use `PLAY_WITH_KEYBOARD_PROMPTS.bat` to regenerate the mod before launching again.
 
-The paths and file container formats follow the upstream GPL-3.0 Hookshot source: `host/prompts.c`, `host/mods.c`, `nx2/prompt_assets.py`, `host/nn_hid.c`. This independent builder uses the game's CFF icon glyphs and block-linear ASTC/BC4 atlas only as **local input**, never redistributes their assets. It generates 5×7 bitmap-labelled vector and texture keycaps. External dependencies: FontTools, Pillow, python-zstandard and astc-encoder-py. The generator is licensed under GPL-3.0-or-later to maintain compatibility with the upstream implementation it derives technical details from.
+**The wrong key appears.** Check the corresponding `key_...` entry in `hookshot_options.ini`. The first binding is shown unless `--both` is enabled.
 
-**Verification status:** The CFF editing/serialization and BC4/block-linear texture algorithms have been exercised using test assets. Full in-game testing against your exact Hookshot build and copyrighted RomFS was not possible here, so if anything renders incorrectly use `hookshot_log.txt` and disable the mod as above.
+**The icons look wrong, are upside down, or appear as white squares.** Earlier builds have had font-outline rendering issues. Rebuild using the latest generator, restart the game, and check for another mod replacing the same font, texture atlas, or resource size table. If the issue persists, disable the mod as described below and include a screenshot and relevant `hookshot_log.txt` lines in a bug report.
+
+**Another UI mod conflicts.** Two RomFS mods cannot independently replace the same complete texture atlas or font without an asset merge. Hookshot's mod load order determines which replacement is used.
+
+**Generation uses a lot of memory or takes a while.** The original UI atlas is large and must be decompressed and processed. Try `--font-only` if you only need the text-based prompts.
+
+### Uninstalling
+
+Close the game, then either delete `mods/99-Keyboard-Prompts/` or rename it to `mods/-99-Keyboard-Prompts/`. Hookshot ignores mod directories whose names begin with a hyphen.
+
+Your original RomFS, saves, and settings do not need to be restored, because the generator does not modify them.
+
+## Contributing
+
+Bug reports and contributions are welcome. For rendering issues, please include your Hookshot version, the relevant `hookshot_log.txt` messages, your key mappings (with any private information removed), and a screenshot where possible.
+
+Please **do not upload copyrighted game assets**, including extracted fonts, texture atlases, or RomFS files, when opening an issue or pull request.
+
+## Credits and licence
+
+This project builds upon the technical work in [NotRexed/Hookshot](https://github.com/NotRexed/Hookshot), particularly its input-binding, RomFS mod-loading, font-prompt, and texture-handling implementations. Thanks to its contributors for making the PC port and its modding support possible.
+
+The **mod generator** is released under the **GNU General Public License v3.0 or later (`GPL-3.0-or-later`)**. See [LICENSE](LICENSE) for the full terms. Third-party Python dependencies retain their respective licences.
+
+This repository does not contain or distribute Nintendo game data. Users must supply their own compatible game files. This is an unofficial community project and is not affiliated with, endorsed by, or maintained by Nintendo or the Hookshot developers.
