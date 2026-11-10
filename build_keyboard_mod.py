@@ -149,16 +149,24 @@ def icon_image(label: str, w: int, h: int, coloured: bool):
     tw = max(1, len(label)*6-1)
     if coloured:
         size = min(w,h)*0.9
-        bw = max(size*0.9, min(w*0.92, size * min(2.0, (tw+5)/12)))
-        bh = min(h*0.86, size*0.85)
+        bw = max(size*0.9, min(w*0.92, size * min(2.1, (tw+6)/12)))
+        bh = min(h*0.84, size*0.80)
         cx,cy=w/2,h/2
         box=(round(cx-bw/2),round(cy-bh/2),round(cx+bw/2),round(cy+bh/2))
-        # The in-game ocarina note is a white icon with dark lettering.
-        draw.rounded_rectangle(box, radius=max(2,round(bh*.15)), fill=(255,255,255,255))
-        pix = min((bw*0.84)/(tw), (bh*0.70)/7)
-        draw_pixels(draw,label,cx-tw*pix/2,cy-7*pix/2,pix,(20,20,20,255))
+        # The in-game ocarina note is a light keycap with darker print and a subtle border.
+        draw.rounded_rectangle(box, radius=max(2,round(bh*.20)), fill=(248,245,238,255), outline=(86,74,58,255), width=max(1, round(bh*0.05)))
+        pix = min((bw*0.76)/(tw), (bh*0.56)/7)
+        draw_pixels(draw,label,cx-tw*pix/2,cy-7*pix/2,pix,(36,31,26,255))
     else:
-        pix = min((w*0.9)/tw, (h*0.82)/7)
+        # Monochrome texture labels are drawn as a clean keycap silhouette with interior lettering.
+        padw = max(1.0, w*0.06)
+        padh = max(1.0, h*0.14)
+        x0,y0,x1,y1 = padw,padh,w-padw,h-padh
+        r = max(1, round((y1-y0)*0.18))
+        draw.rounded_rectangle((x0,y0,x1,y1), radius=r, fill=255)
+        inset = max(1.0, min(w,h)*0.08)
+        draw.rounded_rectangle((x0+inset,y0+inset,x1-inset,y1-inset), radius=max(1, r-round(inset*0.6)), fill=0)
+        pix = min(((x1-x0)*0.72)/(tw), ((y1-y0)*0.50)/7)
         draw_pixels(draw,label,(w-tw*pix)/2,(h-7*pix)/2,pix,255)
     return im
 
@@ -168,29 +176,51 @@ def vector_keycap(label: str, width: float, bbox, glyph_set, private, global_sub
     pen = T2CharStringPen(width, glyph_set)
     x0,y0,x1,y1 = bbox
     ww,hh = x1-x0,y1-y0
-    x0 += 0.05*ww; y0 += 0.08*hh
-    ww *= 0.9; hh *= 0.84
-    # White outline, interior text: a console-style compact keyboard keycap.
+    x0 += 0.06*ww; y0 += 0.10*hh
+    ww *= 0.88; hh *= 0.78
+
+    def polygon(points):
+        if len(points) < 3:
+            return
+        pen.moveTo(points[0])
+        for pt in points[1:]:
+            pen.lineTo(pt)
+        pen.closePath()
+
     def rectangle(a,b,c,d):
-        if c <= a or d <= b:return
-        pen.moveTo((a,b));pen.lineTo((c,b));pen.lineTo((c,d));pen.lineTo((a,d));pen.closePath()
-    thick = min(ww,hh)*.065
-    rectangle(x0,y0,x0+ww,y0+thick)
-    rectangle(x0,y0+hh-thick,x0+ww,y0+hh)
-    rectangle(x0,y0+thick,x0+thick,y0+hh-thick)
-    rectangle(x0+ww-thick,y0+thick,x0+ww,y0+hh-thick)
+        if c <= a or d <= b:
+            return
+        polygon([(a,b),(c,b),(c,d),(a,d)])
+
+    def chamfer_box(a,b,c,d,r):
+        r = max(0, min(r, (c-a)/2, (d-b)/2))
+        polygon([(a+r,b),(c-r,b),(c,b+r),(c,d-r),(c-r,d),(a+r,d),(a,d-r),(a,b+r)])
+
+    # A slightly softer keyboard-style keycap outline.
+    chamfer = min(ww,hh) * 0.10
+    outer = (x0, y0, x0+ww, y0+hh)
+    inner_inset = min(ww,hh) * 0.085
+    chamfer_box(*outer, chamfer)
+    inner = (outer[0]+inner_inset, outer[1]+inner_inset, outer[2]-inner_inset, outer[3]-inner_inset)
+    chamfer_box(*inner, max(0, chamfer-inner_inset*0.55))
+
     label = label.upper()
-    tw = max(1,6*len(label)-1)
-    pixel = min(ww*.84/tw,hh*.68/7)
-    ox=x0+(ww-tw*pixel)/2
-    oy=y0+(hh-7*pixel)/2
+    tw = max(1, 6*len(label)-1)
+    usable_w = inner[2]-inner[0]
+    usable_h = inner[3]-inner[1]
+    pixel = min(usable_w*0.78/tw, usable_h*0.56/7)
+    ox = inner[0] + (usable_w - tw*pixel)/2
+    oy = inner[1] + (usable_h - 7*pixel)/2
     for k,ch in enumerate(label):
-        for row,line in enumerate(GLYPHS.get(ch,GLYPHS['?'])):
+        glyph = GLYPHS.get(ch, GLYPHS['?'])
+        for row,line in enumerate(glyph):
             for col,c in enumerate(line):
                 if c == '1':
-                    x=ox+(6*k+col)*pixel; y=oy+row*pixel
-                    rectangle(x,y,x+pixel*.88,y+pixel*.88)
-    return pen.getCharString(private=private, globalSubrs=global_subrs)
+                    x = ox + (6*k + col) * pixel
+                    # Font coordinates rise upwards, so bitmap rows must be flipped vertically.
+                    y = oy + (6 - row) * pixel
+                    rectangle(x, y, x + pixel*0.86, y + pixel*0.86)
+    return pen.getCharString(private=private, global_subrs=global_subrs)
 
 
 def make_font(game_font: bytes, labels: dict[str,str]) -> bytes:
