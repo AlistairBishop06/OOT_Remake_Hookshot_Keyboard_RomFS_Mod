@@ -149,6 +149,6 @@ Please **do not upload copyrighted game assets**, including extracted fonts, tex
 
 This project builds upon the technical work in [NotRexed/Hookshot](https://github.com/NotRexed/Hookshot), particularly its input-binding, RomFS mod-loading, font-prompt, and texture-handling implementations. Thanks to its contributors for making the PC port and its modding support possible.
 
-The **mod generator** is released under the **GNU General Public License v3.0 or later (`GPL-3.0-or-later`)**. See [LICENSE](LICENSE) for the full terms. Third-party Python dependencies retain their respective licences.
+The **mod generator** is released under the **GNU General Public License v3.0 or later (`GPL-3.0-or-later`)**. Third-party Python dependencies retain their respective licences.
 
 This repository does not contain or distribute Nintendo game data. Users must supply their own compatible game files. This is an unofficial community project and is not affiliated with, endorsed by, or maintained by Nintendo or the Hookshot developers.
