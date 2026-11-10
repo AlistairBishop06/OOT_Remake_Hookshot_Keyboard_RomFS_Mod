@@ -220,7 +220,7 @@ def vector_keycap(label: str, width: float, bbox, glyph_set, private, global_sub
                     # Font coordinates rise upwards, so bitmap rows must be flipped vertically.
                     y = oy + (6 - row) * pixel
                     rectangle(x, y, x + pixel*0.86, y + pixel*0.86)
-    return pen.getCharString(private=private, global_subrs=global_subrs)
+    return pen.getCharString(private=private, globalSubrs=global_subrs)
 
 
 def make_font(game_font: bytes, labels: dict[str,str]) -> bytes:
