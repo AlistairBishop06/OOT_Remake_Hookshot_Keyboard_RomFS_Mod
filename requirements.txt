@@ -1,0 +1,4 @@
+fonttools>=4.50,<5
+pillow>=11,<14
+zstandard>=0.22,<1
+astc-encoder-py>=0.1.12,<1
