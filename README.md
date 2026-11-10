@@ -12,11 +12,11 @@ Prompts are generated from your existing `hookshot_options.ini`, so there is no 
 
 ### In-game prompts
 
-![Keyboard prompts in Hookshot gameplay](https://github.com/user-attachments/assets/dcab7149-da5b-44dd-a15c-e603abc0c72e)
+![Keyboard prompts in Hookshot gameplay](https://github.com/user-attachments/assets/bb10631a-3827-4ba2-9d02-190ebd6c1f61)
 
 ### System menu and control guide
 
-![Keyboard prompt replacements in the Hookshot System menu](https://github.com/user-attachments/assets/bb10631a-3827-4ba2-9d02-190ebd6c1f61)
+![Keyboard prompt replacements in the Hookshot System menu](https://github.com/user-attachments/assets/dcab7149-da5b-44dd-a15c-e603abc0c72e)
 
 *Screenshots were captured during development. The RomFS replacements have been loaded successfully in-game, but the final keycap appearance is still being refined; earlier builds have shown mirrored glyphs or filled keycaps.*
 
